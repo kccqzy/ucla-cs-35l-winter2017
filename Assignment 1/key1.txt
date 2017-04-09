@@ -1,0 +1,141 @@
+-*- mode: text; fill-column: 78; -*-
+
+Keystrokes for Exercise 1.1
+===========================
+
+    C-s P U B L I C RET
+    C-s L a b o r a t o r y RET M-b
+    C-s s e l f - r e f e r e n t i a l RET M-b M-b
+    C-s a r r o w RET M-b
+    C-e
+    C-a
+    C-x C-c
+
+Keystrokes for Exercise 1.2
+===========================
+
+    M-g M-g 1 8 RET C-k C-k
+    C-s D E L E T E M E RET C-a C-k C-k
+    C-s w i k i / H T M L C-s RET C-p C-a C-@ C-n C-n C-n C-w
+    C-s < ! - - RET M-b M-f C-u 7 C-d
+    C-s < ! - - RET C-a C-k C-k
+
+Keystrokes for Exercise 1.3
+===========================
+
+    M-% A s s i g n m e n t SPC 1 RET A s s i g n m e n t SPC 3 7 RET y y q
+    M-< M-% U T F - 8 RET U S - A S C I I RET y q
+    M-< C-s < / o l > RET C-a C-o
+    C-x C-s C-x C-c
+
+Keystrokes for Exercise 1.4
+===========================
+
+    M-> C-p C-f C-k C-r < / h t m l C-r RET C-n C-o C-y
+    M-> C-r < p > RET C-p C-k C-r s h o u l d RET C-a C-o C-y C-n C-a C-k C-k
+    M-> C-r Y o u SPC c a n RET C-a C-@ C-n C-n C-n C-w C-r < h 2 > S u b C-r RET C-n C-y C-p C-d C-p C-d C-p C-d
+    M-> C-r d i f f C-r RET C-r < RET C-k C-r L a b o r a C-r C-r RET C-n C-y
+    M-> C-r < ! - - RET C-k C-r H o m e w o r k C-r RET C-n C-y RET
+    C-s - - - SPC e RET C-a C-@ ESC > C-w C-x b C-g C-h l
+    C-x u
+    M-> C-r - - - SPC RET C-o < ! - - M-> - - >
+    M-< M-% < o l > RET < O l > RET !
+
+In the last part of this exercise, 7 occurrences are replaced.
+
+
+Keystrokes for Exercise 1.5
+===========================
+
+    M-x m a k e - d i r TAB RET j u n k RET
+    C-x C-f j u n k / h e l l o . c RET
+    <keystrokes to type the given source code elided>
+    C-x C-s
+    M-x c o m p i l e RET M-DEL DEL h e l l o RET
+    M-! . / h e l l o RET C-x o C-x h C-w
+
+Buffer contents (Exercise 1.5)
+==============================
+
+    #include <stdio.h>
+    int
+    main (void)
+    {
+      char n = '\n';
+      char b = '\\';
+      char q = '"';
+      char const *p = "#include <stdio.h>%cint%cmain (void)%c{%c  char n = '%cn';%c  char b = '%c%c';%c  char q = '%c';%c  char const *p = %c%s%c;%c  printf (p, n, n, n, n, b, n, b, b, n, q, n, q, p, q, n, n, n, n);%c  return 0;%c}%c";
+      printf (p, n, n, n, n, b, n, b, b, n, q, n, q, p, q, n, n, n, n);
+      return 0;
+    }
+
+Keystrokes for Exercise 1.6
+===========================
+
+    C-x b * s c r a t c h * RET
+    ( r a n d o m ) C-j
+    ( s e t q SPC x SPC ( r a n d o m ) ) C-j
+    ( s e t q SPC y SPC ( r a n d o m ) ) C-j
+    ( * SPC x SPC y ) C-j
+    M-: ( * x SPC y ) RET
+
+Answers to Questions in Exercise 1.6
+====================================
+
+The product of the two random numbers obtained in step 4 is
+-1927728198212966576.
+
+When `M-:` is used, the output is echoed in the minibuffer instead of inserted
+into the buffer.
+
+No the two random integers are not truly random. Firstly, machine integers have
+a limited precision and therefore the "random" integers are constrained to be
+within the range of 64-bit integers. Secondly, the produced integers are not
+random when considered as samples of a uniform random distribution limited to
+integers, because my system does not have True Random Number Generator hardware.
+All random numbers are pseudo-random numbers computed with an algorithm. Third,
+philosophically it is unknowable whether a particular number is random. For
+example, is 4 random? I produced this number by throwing an actual dice. For
+just one (or two) numbers, it is impossible to tell whether this number is
+random. We need many more such numbers drawn from the same random distribution,
+and then we can perform statistical tests to calculate the probability of these
+sequences of numbers being random.
+
+For the probability that the result is mathematically correct, essentially we
+wish to compute the probability of x * y within the range of 62-bit signed
+integers, where x and y are drawn from a discrete uniform random distribution
+from -2^61 to 2^61-1. These two values are the Emacs variables
+`most-positive-fixnum` and `most-negative-fixnum`. Fix x, then the permissible
+y values can be calculated as follows:
+
+    [-floor(2^61/x), floor((2^61-1)/x)]       if x > 0
+    [-2^61, 2^61-1]                           if x = 0
+    [-floor(2^61/(-x)), floor((2^61-1)/(-x))] if x < 0
+
+If we define f(x) as the number of y values that will not cause an overflow,
+then we have
+
+     f(x) = floor((2^61-1)/x) + floor(2^61/x) + 1        if x > 0
+            2^62                                         if x = 0
+            floor((2^61-1)/(-x)) + floor(2^61/(-x)) + 1  if x < 0
+
+Finally we can sum the above expression over all x and then divide by 2^124 to
+get the result.
+
+This sum is difficult to evaluate directly, but we can quite easily find the
+integral of the following function that asymptotically approximates the function
+f:
+
+    g(x) = 1+2^62/x    if x > 0
+           2^62        if x = 0
+           1+2^62/(-x) if x < 0
+
+Note that in this process, the domain of the function has been changed from the
+integers to the reals. Also notice that the function g is always greater than or
+equal to the function f, if we similarly extend f to the reals by saying
+f(x)=f(floor(x)) for all x. This means we can obtain an upper bound for the
+original sum that involves f by performing an integration on g. Indeed, we find
+that the original sum is essentially a lower Riemann sum of g.
+
+Therefore the probability that the product of two random 62-bit signed integers
+does not overflow is 1.877e-17.

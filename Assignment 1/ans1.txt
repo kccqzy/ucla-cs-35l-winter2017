@@ -1,0 +1,114 @@
+-*- mode: text; fill-column: 78; -*-
+
+1.  To find all commands that have a specific word in the description part of
+    the man page, run `man -k STRING`. For example, on my system, `man -k
+    page` produces a 129-line output listing all commands whose description
+    contains the word "page", their sections and a brief description. I
+    discovered this by running `man man` and reading through the options.
+
+2.  They are located at `/bin/cp` and `/usr/bin/wc`. I discovered this by
+    running `which cp` and `which wc`.
+
+3.  There are three such programs on the system on the $PATH, namely `[`, `w`,
+    and `X`. I discovered this by writing the following small bash program:
+
+        for path in $(echo $PATH | sed 's/:/ /g'); do
+            ls $path | grep '^.$'
+        done 2>/dev/null
+
+    This works by listing all the paths within the `$PATH` by converting the
+    colon to a space, and then using grep to filter for those that contain
+    only one character. Notably it has a bug in that it does not properly
+    handle paths in $PATH that contain spaces, newlines or tabs, but that does
+    not happen on my system. Also it may report non-executable files in $PATH.
+
+    The utility `[` tests a condition and results a suitable exit code. It is
+    frequently used in bash scripts with the `if` builtin.
+
+    The utility `w` displays who is logged in and what they are doing.
+
+    `X` launches the X11 server.
+
+    Alternatively, we can do a comprehensive search by using
+
+        find / -type f -perm /a+x -name '?'
+
+    Although it will also report false positives when the files are marked
+    executable but aren't really programs. A more robust might be to combine
+    this with `file` and check the file is an ELF executable or script
+    executable.
+
+4.  The file `/usr/bin/emacs-24.3` is executed. I discovered this by running
+    `readlink -f /usr/bin/emacs`.
+
+5.  The mode `g+s,o-x` means the file has setgid execution and the owner is not
+    executable. That is to say when the file is executed, it will always have
+    the group id of the owner. Furthermore, the owner of the file cannot
+    execute it.
+
+6.  We can use `-mtime -21`. I discovered this by running `man find`.
+
+7.  There are none in my home directory. I discovered this by running
+
+        find ~ -type d -mtime -21
+
+    I observe that no output is printed.
+
+8.  There are twenty. I discovered this by running
+
+        find $(dirname $(which find)) -maxdepth 1 -type l | wc -l
+
+9.  It is `libfreeblpriv3.so`. I discovered this by running
+
+        ls -tl /usr/lib | grep '^-' | tail -n 1 | awk '{ print $9 }'
+
+10. The current locale is determined by some environment variables, including
+    'LC_CTYPE` and `LANG`. The actual definition files are in
+    /usr/lib/locale/locale-archive and /usr/share/i18n/locales. I discovered
+    this by reading about `locale` in section 1, 5, and 7 of the manpages.
+
+11. There are 10 of them. I discovered this by using apropos in emacs and
+    search for `sort`.
+
+    -  Buffer-menu-sort
+    -  sort-columns
+    -  sort-fields
+    -  sort-lines
+    -  sort-numeric-fields
+    -  sort-pages
+    -  sort-paragraphs
+    -  sort-regexp-fields
+    -  tabulated-list-col-sort
+    -  tabulated-list-sort
+
+12. C-M-a runs the command beginning-of-defun, which is an interactive compiled
+    Lisp function in `lisp.el'.
+
+    C-M-b runs the command backward-sexp, which is an interactive compiled
+    Lisp function in `lisp.el'.
+
+    C-M-c runs the command exit-recursive-edit, which is an interactive
+    built-in function in `C source code'.
+
+    C-M-d runs the command down-list, which is an interactive compiled
+    Lisp function in `lisp.el'.
+
+    C-M-e runs the command end-of-defun, which is an interactive compiled
+    Lisp function in `lisp.el'.
+
+    C-M-f runs the command forward-sexp, which is an interactive compiled
+    Lisp function in `lisp.el'.
+
+    C-M-h runs the command mark-defun, which is an interactive compiled
+    Lisp function in `lisp.el'.
+
+13. Signal a `quit' condition. During execution of Lisp code, this character
+    causes a quit directly. At top-level, as an editor command, this simply
+    beeps. It can also be used to quit a partially entered keyboard shortcut.
+
+14. The yank function inserts the last stretch of killed text in the kill ring.
+
+15. The first difference is that `ls -l` does not include the two builtin hard
+    links, `.` and `..` but they are included in the output in emacs's dired.
+    The second difference is that in emacs, the dired buffer can be made
+    editable and changes will be reflected in the actual directory.
