@@ -137,5 +137,6 @@ f(x)=f(floor(x)) for all x. This means we can obtain an upper bound for the
 original sum that involves f by performing an integration on g. Indeed, we find
 that the original sum is essentially a lower Riemann sum of g.
 
-Therefore the probability that the product of two random 62-bit signed integers
-does not overflow is 1.877e-17.
+Therefore the probability that the product of two random 62-bit signed
+integers does not overflow is 1.877e-17. The probability that the product is
+mathematically incorrect is 1-1.877e-17.
