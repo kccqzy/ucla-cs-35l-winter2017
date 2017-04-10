@@ -1,0 +1,29 @@
+#!/bin/sh
+export LC_ALL=C LANG=C
+exec awk '
+    { content = content $0 " " }
+END {
+    gsub(/[ \t]+/, " ", content)
+    split(content, rows, "</tr> <tr>")
+    for (i in rows) {
+        if (rows[i] ~ /<td>/) {
+            split(rows[i], columns, "</td> <td>")
+            hword = columns[2]
+            sub(/<\/td> *$/, "", hword)
+            if (hword ~ /./) {
+                gsub(/[ \t]*/, "", hword)
+                gsub(/^[ \t]/, "", hword)
+                hword = tolower(hword)
+                gsub(/<\/?u>/, "", hword)
+                gsub(/`/, "\047", hword)
+                gsub(/[, ]/, "\n", hword)
+                gsub(/\n+/, "\n", hword)
+                if (hword !~ /[^\012pk\047mnwlhaeiou]/) {
+                    result = result sprintf("%s\n", hword)
+                }
+            }
+        }
+    }
+    printf("%s", result) | "sort -u"
+}
+'

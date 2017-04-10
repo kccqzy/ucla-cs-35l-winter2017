@@ -1,0 +1,127 @@
+-*- mode: text; fill-column: 78; -*-
+
+CS35L Lab: Spell-checking Hawaiian
+==================================
+
+First I set the locale of my session:
+
+    export LC_ALL=C
+    export LANG=C
+
+After which I ran `locale` to make sure localization is disabled:
+
+    $ locale
+    LANG=C
+    LC_CTYPE="C"
+    LC_NUMERIC="C"
+    LC_TIME="C"
+    LC_COLLATE="C"
+    LC_MONETARY="C"
+    LC_MESSAGES="C"
+    LC_PAPER="C"
+    LC_NAME="C"
+    LC_ADDRESS="C"
+    LC_TELEPHONE="C"
+    LC_MEASUREMENT="C"
+    LC_IDENTIFICATION="C"
+    LC_ALL=C
+
+Next I created a sorted, unique file called words:
+
+    sort -u /usr/share/dict/words > words
+
+Then I fetched the HTML of the webpage as instructed:
+
+    curl -sSL -o assign2.html \
+        http://web.cs.ucla.edu/classes/winter17/cs35L/assign/assign2.html
+
+I then ran all the mentioned commands in sequence:
+
+    tr -c 'A-Za-z' '[\n*]'
+    tr -cs 'A-Za-z' '[\n*]'
+    tr -cs 'A-Za-z' '[\n*]' | sort
+    tr -cs 'A-Za-z' '[\n*]' | sort -u
+    tr -cs 'A-Za-z' '[\n*]' | sort -u | comm - words
+    tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words
+
+The first converts all characters that are not ASCII letters into newlines.
+The second does that, but also coalesces multiple adjacent newlines into a
+single one. The third does that, but also sorts the resulting output. The
+fourth does a sort that also removes duplicates. The fifth compares the list
+of words in the HTML document against the spellchecker dictionary and displays
+a three-column output: column one contains words unique to the HTML file
+(spellcheck failed), column two contains words unique to the dictionary, and
+column three contains words appearing in both (spellcheck succeeded).
+
+* * *
+
+As instructed I created a file named hwords:
+
+    wget http://mauimapp.com/moolelo/hwnwdseng.htm
+
+In my shell script, the basic idea is that we process each row of the table
+one by one and then invoke `sort -u` to sort. Because there is no relationship
+between an HTML source line and a table row, it is easier to join all lines first.
+
+After joining all lines and squeezing all spaces, I use `</tr> <tr>` as a
+separator. I then operate on those containing `<td>`. Now we have exactly one
+HTML table row here.
+
+I then perform another split, this time on `</td> <td>` and extracting the
+second item. I remove trailing and leading spaces. I do all the processing
+requested, including converting them to lowercase, removing <u> tags,
+converting ASCII grave to apostrophe, splitting words on spaces or commas, and
+finally filtering out results containing non-Hawaiian letters (in this case,
+question mark and hyphen). I then concatenate this into a string.
+
+After this processing, the final string is then piped to `sort -u`.
+
+The final shell script looks like this:
+
+    #!/bin/sh
+    export LC_ALL=C LANG=C
+    exec awk '
+        { content = content $0 " " }
+    END {
+        gsub(/[ \t]+/, " ", content)
+        split(content, rows, "</tr> <tr>")
+        for (i in rows) {
+            if (rows[i] ~ /<td>/) {
+                split(rows[i], columns, "</td> <td>")
+                hword = columns[2]
+                sub(/<\/td> *$/, "", hword)
+                if (hword ~ /./) {
+                    gsub(/[ \t]*/, "", hword)
+                    gsub(/^[ \t]/, "", hword)
+                    hword = tolower(hword)
+                    gsub(/<\/?u>/, "", hword)
+                    gsub(/`/, "\047", hword)
+                    gsub(/[, ]/, "\n", hword)
+                    gsub(/\n+/, "\n", hword)
+                    if (hword !~ /[^\012pk\047mnwlhaeiou]/) {
+                        result = result sprintf("%s\n", hword)
+                    }
+                }
+            }
+        }
+        printf("%s", result) | "sort -u"
+    }
+    '
+
+
+* * *
+
+After hwords is built, to do the spellchecking, we can run
+
+    tr 'A-Z' 'a-z' | \
+    tr -cs 'a-z' '[\n*]' | \
+    sed -n '/./p' | sort -u | comm -23 - hwords
+
+The number of words misspelled as English on the webpage is 38. The number of
+words misspelled as Hawaiian on the webpage is 405.
+
+There are three words that are "misspelled" as English, but not as Hawaiian,
+namely "halau", "lau" and "wiki."
+
+There are 370 words "misspelled" as Hawaiian but not as English such as "a",
+"able", and "about".

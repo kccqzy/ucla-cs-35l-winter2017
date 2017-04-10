@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Warning: This is non-portable in that it uses non-POSIX utilities and
+# non-POSIX extensions to utilities.
+
+export LC_ALL=C LANG=C
+digest() {
+    if which openssl > /dev/null; then
+        openssl dgst -sha1 < "$1" | head -c 40
+    elif which sha1sum > /dev/null; then
+        sha1sum < "$1" | head -c 40
+    elif which shasum > /dev/null; then
+        shasum < "$1" | head -c 40
+    fi
+}
+
+declare -A hashes
+while IFS= read -r -d '' file; do
+    if [[ -r "$file" ]]; then
+        this_hash=$(digest "$file")
+        if [[ "${hashes[$this_hash]}" != "" ]]; then
+            ln -f -- "${hashes[$this_hash]}" "$file"
+        else
+            hashes[$this_hash]="$file"
+        fi
+    else
+        echo "$0: $file: not readable, skipping" >&2
+    fi
+done < <(find "$1" -maxdepth 1 -type f -print0 | sort -z)

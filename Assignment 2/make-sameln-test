@@ -1,0 +1,29 @@
+#!/bin/bash
+rm -rf testdir
+mkdir -p testdir/dir
+touch testdir/dir/empty
+cp -f -- /usr/share/dict/words testdir/dir/words
+cp -f -- /usr/share/dict/words testdir/dir/words2
+cp -f -- /usr/share/dict/words testdir/.words
+cp -f -- /usr/share/dict/words testdir/words
+cp -f -- /usr/share/dict/words testdir/"$(printf "\n-rwsr-xr-x")"
+cp -f -- /usr/share/dict/words "testdir/   words"
+cp -f -- /usr/share/dict/words 'testdir/"words'
+cp -f -- /usr/share/dict/words 'testdir/'\''words'
+cp -f -- /usr/share/dict/words "testdir/\nwords"
+cp -f -- /usr/share/dict/words "testdir/\\words"
+cp -f -- /usr/share/dict/words 'testdir/*words'
+cp -f -- /usr/share/dict/words 'testdir/*wo??rds???'
+cp -f -- /usr/share/dict/words "testdir/words\n"
+cp -f -- /usr/share/dict/words testdir/"$(printf "\n\n\n\n\n\nwords")"
+cp -f -- /usr/share/dict/words testdir/"$(printf "word\n\n\n\n\n\ns")"
+cp -f -- /usr/share/dict/words testdir/--words
+cp -f -- /usr/share/dict/words testdir/-words
+head -n 500 /usr/share/dict/words > testdir/words500
+head -n 600 /usr/share/dict/words > testdir/words600
+head -n 500 /usr/share/dict/words > testdir/words_five_hundred
+touch testdir/empty
+ln -sf words testdir/symlink
+ln -sf does-not-exist testdir/symlink-bad
+mkfifo testdir/fifo
+install -m u=w /usr/share/dict/words testdir/unreadable
