@@ -1,0 +1,61 @@
+-*- mode: text; fill-column: 78; -*-
+
+CS35L Lab 3: Installing a small change to a big package
+=======================================================
+
+First I downloaded coreutils 7.6 as instructed:
+
+    wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-7.6.tar.gz
+
+The file was downloaded successfully.
+
+Then I untarred it, configured it, and compiled it and installed it into a
+directory of my own:
+
+    mkdir -p ~/lab3/prefix && \
+    tar xzvfC coreutils-7.6.tar.gz ~/lab3 && \
+    cd ~/lab3/coreutils-7.6 && \
+    ./configure --prefix="$HOME/lab3/prefix" && \
+    make install
+
+Everything went smoothly. The coreutil utilities are successfully compiled and
+installed into ~/lab3/prefix.
+
+I then reproduced the bug:
+
+    LC_ALL=en_US.UTF-8 ~/lab3/prefix/bin/ls -l | head
+
+This results in the following output:
+
+    total 4644
+    -rw-r--r--  1 classzqi class   80541 2008-09-18 00:19 ABOUT-NLS
+    -rw-r--r--  1 classzqi class   47272 2009-09-10 22:56 aclocal.m4
+    -rw-r--r--  1 classzqi class    3571 2009-09-01 04:01 AUTHORS
+    -rwxr-xr-x  1 classzqi class   23005 2009-09-01 04:01 bootstrap
+    -rw-r--r--  1 classzqi class    5641 2009-09-10 22:52 bootstrap.conf
+    drwxr-xr-x  2 classzqi class    4096 2009-09-10 23:15 build-aux
+    -rw-r--r--  1 classzqi class    7744 2009-09-10 11:29 cfg.mk
+    -rw-r--r--  1 classzqi class  310286 2009-09-10 23:15 ChangeLog
+    -rw-r--r--  1 classzqi class  448879 2009-09-01 04:01 ChangeLog-2005
+
+This confirms that the bug is present.
+
+As instructed, I used vim to edit the file ls.c under the src directory
+according to the diff. Afterwards, I compile and install it, and then verify
+that the workaround works:
+
+    make install
+    LC_ALL=en_US.UTF-8 ~/lab3/prefix/bin/ls -l | head
+
+The output is now:
+
+    total 4644
+    -rw-r--r--  1 classzqi class   80541 Sep 18  2008 ABOUT-NLS
+    -rw-r--r--  1 classzqi class   47272 Sep 10  2009 aclocal.m4
+    -rw-r--r--  1 classzqi class    3571 Sep  1  2009 AUTHORS
+    -rwxr-xr-x  1 classzqi class   23005 Sep  1  2009 bootstrap
+    -rw-r--r--  1 classzqi class    5641 Sep 10  2009 bootstrap.conf
+    drwxr-xr-x  2 classzqi class    4096 Sep 10  2009 build-aux
+    -rw-r--r--  1 classzqi class    7744 Sep 10  2009 cfg.mk
+    -rw-r--r--  1 classzqi class  310286 Sep 10  2009 ChangeLog
+    -rw-r--r--  1 classzqi class  448879 Sep  1  2009 ChangeLog-2005

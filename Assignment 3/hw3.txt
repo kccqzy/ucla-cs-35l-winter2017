@@ -1,0 +1,87 @@
+-*- mode: text; fill-column: 78; -*-
+
+CS35L Lab 3 Homework: Rewriting a script
+========================================
+
+Q1
+--
+
+No it is unnecessary. The duplicate case label has nothing to do with the
+workaround of producing traditional style date output.
+
+However it is good practice to remove the duplicate case label as it is,
+strictly speaking, disallowed by the C99 standard, and may be rejected by
+compilers in "strict" or "pedantic" mode.
+
+C99 Section 6.8.4 Paragraph 2
+
+> The expression of each case label shall be an integer constant expression
+> and no two of the case constant expressions in the same switch statement
+> shall have the same value after conversion. There may be at most one default
+> label in a switch statement. (Any enclosed switch statement may have a
+> default label or case constant expressions with values that duplicate case
+> constant expressions in the enclosing switch statement.)
+
+Q2
+--
+
+There is incidental complexity introduced by distributing a custom, patched
+version of a common program like ls. Indeed, the build is now modified from
+the original but there is no indication of being so. Note that the patch does
+not modify the output of --help or --version switches to indicate that a
+change has been made. Although some users may prefer the old UNIX style of
+date format, utilities relying on the ISO format may stop working.
+Furthermore, unless the company has very good deployment and IT operational
+practices, it will be very easy to lose track of which machines have the
+patched version and which ones are yet to be patched, especially in a dynamic
+environment when new machines are being installed.
+
+Legally, since coreutils is released under the copyleft GNU General Public
+License, the modification and distribution of such GPL software may prove to
+be especially problematic, especially when distributed to other legal
+entities, given that GPL requires source code to be made available to end
+users to protect their freedom. Not distributing the source code alongside the
+patched binary could be a violation of the GPL, but on the other hand the
+distribution of the source code may also prove troublesome.
+
+Furthermore, in non-English locales, it actually removes a previously useful
+functionality, namely the proper internationalization of strings. These users
+may find the English version inconsistent with the rest of their system and/or
+culturally insensitive.
+
+Q3
+--
+
+When the script is invoked on an empty file, a Python exception is thrown
+because in the invocation of `random.choice`, it assumes the given list is
+nonempty, which is not the case. It computes a random index between 0 and the
+length of the list (also 0), but the index is out of range because there are
+no elements in the list.
+
+Q4
+--
+
+Python 3 has disallowed the destructing `except as` syntax, causing the Python
+interpreter to fail to parse. In other words, in Python 2, the line
+
+    except E as T
+
+catches an exception of class E and binds it to the expression T.
+
+In PEP 3110, it is mentioned that the token following `as` is changed from
+`test` to `NAME`, meaning only valid identifiers can be used as `except`
+targets.
+
+The patch necessary to make the script work is:
+
+    --- randline.py	(original, Python 2 only)
+    +++ randline.py	(new, Python 2 and 3)
+    @@ -62,7 +62,8 @@
+             generator = randline(input_file)
+             for index in range(numlines):
+                 sys.stdout.write(generator.chooseline())
+    -    except IOError as (errno, strerror):
+    +    except IOError as ioerror:
+    +        errno, strerror = ioerror.args
+             parser.error("I/O error({0}): {1}".
+                          format(errno, strerror))
