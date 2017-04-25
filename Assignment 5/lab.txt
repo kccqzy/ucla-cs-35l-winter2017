@@ -1,0 +1,29 @@
+-*- mode: text; fill-column: 78; -*-
+
+Laboratory: Buffered versus unbuffered I/O
+==========================================
+
+I used the strace command to compare the systems calls issued by `tr2b` and
+`tr2u`.
+
+    for prog in tr2b tr2u; do
+        CC=/usr/local/cs/bin/gcc CFLAGS="-O3 -march=native -std=c99" make -B $prog
+        strace -e trace=read,write ./$prog aeioucdfgh cdfghaeiou >/dev/null <aoi10.html 2> $prog.syscalls.txt
+    done
+
+When the output is not a tty, the `tr2b` programs issues write(1) system calls
+with the size set to 4096, except for the last block of buffer where there is
+less than 4096 bytes to write. It also issues read(1) system calls with the
+size set to 65536.
+
+When the output is a tty, although read(1) system calls are still issued with
+the size set to 65536, there is now one write(1) system call per line. This is
+because by default the C library detects if the output is a tty, and if it is
+sets the buffering mode to line buffering.
+
+For `tr2u`, as expected, regardless of whether the output is a tty, each
+system call only reads or writes one byte at a time.
+
+I also used time to find the time taken to copy a 6MB ASCII file to /dev/null
+with about 160,000 lines. On my machine, tr2b consistently takes about 0.10
+seconds to complete the copy, whereas tr2u takes around 3.4 seconds.

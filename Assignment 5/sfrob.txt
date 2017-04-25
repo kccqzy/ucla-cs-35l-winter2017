@@ -1,0 +1,46 @@
+-*- mode: text; fill-column: 78; -*-
+
+Laboratory: Encrypted sort revisited
+====================================
+
+There is some significant difference in performance between sfrob and sfrobu.
+My sfrobu is consistently faster than sfrob when stdin is an actual file,
+because it uses O(1) system calls to read all the data, and also performs
+(amortized) O(lg N) memory allocations. On the other hand, for sfrob, the
+number of system calls is O(N), and the number of memory allocations depends
+on the number of space characters in the input.
+
+For example, when operating on /usr/local/cs/jdk1.8.0_112/jre/lib/rt.jar,
+sfrobu takes between 0.18 to 0.25 seconds, whereas sfrob takes between 0.30 to
+0.34 seconds.
+
+In another smaller but pure ASCII file containing many more spaces, my sfrob
+takes about 5.8 seconds, whereas sfrobu takes only about 2.2 seconds.
+
+When the input is piped from another process, the difference becomes less
+pronounced but still very significant. This is because although unavoidably
+there are many more system calls for sfrobu, the number of memory allocation
+is still amortized O(lg N) due to an exponentially expanding buffer.
+
+The number of comparisons performed is proportional to N lg N where N is the
+number of spaces in the given input.
+
+Comparing the overall performance, I find that sfrobu is consistently the
+fastest, followed by sfrobs, and then followed by sfrob. The case-insensitive
+version consistently takes slightly more time than the case-sensitive version,
+but the difference is not great. The results are summarized in the following
+table.
+
++-----------+-------------+--------------+-----------+------------+
+|  Variant  | Piped ASCII | Direct ASCII | Piped JVM | Direct JVM |
++===========+=============+==============+===========+============+
+|   sfrob   |          4.8|           5.8|       0.36|        0.33|
++-----------+-------------+--------------+-----------+------------+
+|  sfrobu   |          2.2|           2.2|       0.22|        0.19|
++-----------+-------------+--------------+-----------+------------+
+|  sfrobs   |          2.7|           2.7|       0.44|        0.44|
++-----------+-------------+--------------+-----------+------------+
+| sfrobu -f |          2.8|           2.7|       0.28|        0.22|
++-----------+-------------+--------------+-----------+------------+
+| sfrobs -f |          3.5|           3.3|       0.51|        0.46|
++-----------+-------------+--------------+-----------+------------+
