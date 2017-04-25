@@ -1,0 +1,54 @@
+-*- mode: text; fill-column: 78; -*-
+
+Laboratory: Debugging a C program
+=================================
+
+I downloaded and installed the buggy version of coreutils:
+
+    mkdir -p ~/lab4/prefix
+    curl -sS http://web.cs.ucla.edu/classes/winter17/cs35L/assign/coreutils-with-bug.tar.gz | tar xzvC ~/lab4
+    cd ~/lab4/coreutils-with-bug
+    ./configure --prefix=$HOME/lab4/prefix
+    make
+
+The build failed with the following error message:
+
+    In file included from utimecmp.c:41:0:
+    utimens.h:2:5: error: conflicting types for 'futimens'
+     int futimens (int, char const *, struct timespec const [2]);
+         ^~~~~~~~
+    In file included from utimecmp.h:25:0,
+                     from utimecmp.c:25:
+    /usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+     extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+                ^~~~~~~~
+
+I then applied the renaming patch and tried the build again:
+
+    curl -sS http://web.cs.ucla.edu/classes/winter17/cs35L/assign/coreutils.diff | sed '/^---/ { s/~/ /g }' | patch -p0
+    make install
+
+The build succeeded. I then reproduced the issue:
+
+    tmp="$(mktemp -d)"
+    cd "$tmp"
+    touch -d '1918-11-11 11:00 GMT' wwi-armistice
+    touch now && sleep 1 && touch now1
+    TZ=UTC0 ~/lab4/prefix/bin/ls -lt --full-time *
+
+I read through some relevant parts of the source code and determined that the
+cause was an integer overflow in the comparison function timespec_cmp for the
+tv_sec field inside the struct timespec. I changed the comparison function to
+avoid the overflow and then tested it again. The program works now.
+
+I also tried the test case in my home directory. It claims that the file
+wwwi-armistice is modified on December 17, 2054. This is likely due to a
+filesystem limitation and being unable to store a negative timestamp:
+
+    touch -d '1970-01-01 00:00 GMT' epoch
+    touch -d '1969-12-31 23:59:59 GMT' before-epoch
+
+The first correctly stores zero as the timestamp, but the second has a
+timestamp of Feb 7, 2106, 6:28:15 UTC. Notably, this is exactly 2^32-1 seconds
+since the epoch, or 4,294,967,295. This shows that the timestamp is stored as
+an unsigned 32-bit integer.
